@@ -1,6 +1,8 @@
 import streamlit as st
 from valuation import get_stock_data, value_stock
 
+from content_agent import generate_content
+
 st.title("📊 AI Stock Valuation Test")
 
 ticker = st.text_input("Enter Stock Ticker (e.g. AAPL)")
