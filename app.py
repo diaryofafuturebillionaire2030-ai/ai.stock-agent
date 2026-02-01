@@ -1,41 +1,42 @@
 import streamlit as st
-from valuation import get_stock_data, value_stock
-from content_agent import generate_content
+import yfinance as yf
 
-st.title("📊 AI Stock Valuation & Content Generator")
+from content_agent import (
+    generate_x_thread,
+    generate_youtube_script,
+    generate_instagram_caption
+)
 
-ticker = st.text_input("Enter Stock Ticker (e.g. AAPL)")
+st.title("📊 AI Stock Valuation Agent")
 
-if st.button("Analyze Stock"):
-    data = get_stock_data(ticker)
+ticker = st.text_input("Enter Stock Ticker (e.g. NVDA, AAPL)")
 
-    # Check if EPS exists
-    if not data["eps"]:
-        st.error("EPS data not available for this stock.")
-    else:
-        valuation = value_stock(data["eps"], data["price"])
+if ticker:
+    stock = yf.Ticker(ticker)
+    price = stock.info.get("currentPrice", "N/A")
+    eps = stock.info.get("trailingEps", "N/A")
 
-        st.subheader(f"{data['name']} ({ticker})")
-        st.write("Current Price:", data["price"])
-        st.write("EPS:", data["eps"])
-        st.metric("Base Value", valuation["Base Value"])
-        st.metric("Bull Value", valuation["Bull Value"])
-        st.metric("Bear Value", valuation["Bear Value"])
-        st.metric("Margin of Safety (%)", valuation["Margin of Safety (%)"])
-        st.success(f"Final Verdict: {valuation['Verdict']}")
+    st.subheader("📈 Stock Info")
+    st.write(f"**Current Price:** {price}")
+    st.write(f"**EPS:** {eps}")
 
-        # Generate AI content using Hugging Face
-        
-st.subheader("📢 AI Generated Content")
+    # Simple valuation logic
+    base_value = round(eps * 15, 2) if eps != "N/A" else "N/A"
+    bull_value = round(eps * 20, 2) if eps != "N/A" else "N/A"
+    bear_value = round(eps * 10, 2) if eps != "N/A" else "N/A"
 
-x_thread = generate_x_thread(data['name'], data['price'], valuation)
-st.markdown("**X Thread:**")
-st.write(x_thread)
+    st.subheader("💰 Valuation")
+    st.write(f"Base Value: {base_value}")
+    st.write(f"Bull Value: {bull_value}")
+    st.write(f"Bear Value: {bear_value}")
 
-youtube_script = generate_youtube_script(data['name'], data['price'], valuation)
-st.markdown("**YouTube Script:**")
-st.write(youtube_script)
+    st.subheader("🧠 AI Content")
 
-instagram_caption = generate_instagram_caption(data['name'], data['price'], valuation)
-st.markdown("**Instagram Caption:**")
-st.write(instagram_caption)
+    if st.button("Generate X Thread"):
+        st.write(generate_x_thread(ticker, price, base_value, bull_value, bear_value))
+
+    if st.button("Generate YouTube Script"):
+        st.write(generate_youtube_script(ticker, price, base_value, bull_value, bear_value))
+
+    if st.button("Generate Instagram Caption"):
+        st.write(generate_instagram_caption(ticker, price, base_value, bull_value, bear_value))
