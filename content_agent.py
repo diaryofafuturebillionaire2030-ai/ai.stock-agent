@@ -7,10 +7,9 @@ def load_model():
 
 model = load_model()
 
-def generate_content(stock, price, valuation):
+def generate_x_thread(stock, price, valuation):
     prompt = f"""
 You are a professional equity research analyst.
-
 Stock: {stock}
 Current Price: {price}
 Valuation:
@@ -19,14 +18,42 @@ Bull: {valuation['Bull Value']}
 Bear: {valuation['Bear Value']}
 Verdict: {valuation['Verdict']}
 
-Generate:
-1. X thread (5 short tweets)
-2. YouTube script (1–2 minutes)
-3. Instagram caption (short and engaging)
-
-Use simple language, highlight risks, and avoid financial advice.
+Write 5 short tweets (X thread) summarizing this stock. Simple, engaging, and risk-aware.
 """
+    with st.spinner("Generating X thread... ⏳"):
+        results = model(prompt, max_length=150, do_sample=True)
+    return results[0]['generated_text']
 
-    with st.spinner("Generating AI content... ⏳"):
-        results = model(prompt, max_length=300, do_sample=True)
+def generate_youtube_script(stock, price, valuation):
+    prompt = f"""
+You are a professional equity research analyst.
+Stock: {stock}
+Current Price: {price}
+Valuation:
+Base: {valuation['Base Value']}
+Bull: {valuation['Bull Value']}
+Bear: {valuation['Bear Value']}
+Verdict: {valuation['Verdict']}
+
+Write a 1–2 minute YouTube script explaining this stock. Simple language, engaging.
+"""
+    with st.spinner("Generating YouTube script... ⏳"):
+        results = model(prompt, max_length=200, do_sample=True)
+    return results[0]['generated_text']
+
+def generate_instagram_caption(stock, price, valuation):
+    prompt = f"""
+You are a professional equity research analyst.
+Stock: {stock}
+Current Price: {price}
+Valuation:
+Base: {valuation['Base Value']}
+Bull: {valuation['Bull Value']}
+Bear: {valuation['Bear Value']}
+Verdict: {valuation['Verdict']}
+
+Write a short, catchy Instagram caption about this stock.
+"""
+    with st.spinner("Generating Instagram caption... ⏳"):
+        results = model(prompt, max_length=100, do_sample=True)
     return results[0]['generated_text']
