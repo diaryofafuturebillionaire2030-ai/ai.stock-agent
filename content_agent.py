@@ -1,12 +1,16 @@
-import openai
 import streamlit as st
+from transformers import pipeline
 
-# This will read your API key from GitHub / Streamlit secrets
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# Load a text generation model from Hugging Face
+@st.cache_resource
+def load_model():
+    return pipeline("text-generation", model="gpt2")
+
+model = load_model()
 
 def generate_content(stock, price, valuation):
     prompt = f"""
-You are a professional equity research analyst and finance content creator.
+You are a professional equity research analyst.
 
 Stock: {stock}
 Current Price: {price}
@@ -16,21 +20,8 @@ Bull: {valuation['Bull Value']}
 Bear: {valuation['Bear Value']}
 Verdict: {valuation['Verdict']}
 
-Create:
-1. A viral X thread (5 tweets)
-2. A YouTube script (1–2 minutes)
-3. A short Instagram caption
-
-Rules:
-- Simple language
-- Risk-focused
-- No financial advice
+Write a short social media post summarizing this stock (simple language, risk-focused):
 """
 
-    response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.6
-    )
-
-    return response.choices[0].message.content
+    results = model(prompt, max_length=150, do_sample=True)
+    return results[0]['generated_text']
