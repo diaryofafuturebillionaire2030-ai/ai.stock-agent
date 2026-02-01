@@ -1,7 +1,6 @@
 import streamlit as st
 from transformers import pipeline
 
-# Load a text generation model from Hugging Face
 @st.cache_resource
 def load_model():
     return pipeline("text-generation", model="gpt2")
@@ -23,5 +22,6 @@ Verdict: {valuation['Verdict']}
 Write a short social media post summarizing this stock (simple language, risk-focused):
 """
 
-    results = model(prompt, max_length=150, do_sample=True)
+    with st.spinner("Generating AI content... ⏳"):
+        results = model(prompt, max_length=150, do_sample=True)
     return results[0]['generated_text']
