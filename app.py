@@ -7,36 +7,92 @@ from content_agent import (
     generate_instagram_caption
 )
 
+from valuation import stock_valuation
+
+# ------------------ PAGE SETUP ------------------
+st.set_page_config(
+    page_title="AI Stock Valuation Agent",
+    layout="centered"
+)
+
 st.title("📊 AI Stock Valuation Agent")
 
-ticker = st.text_input("Enter Stock Ticker (e.g. NVDA, AAPL)")
+# ------------------ USER INPUT ------------------
+ticker = st.text_input("Enter Stock Ticker (e.g. NVDA, AAPL, MSFT)")
 
 if ticker:
     stock = yf.Ticker(ticker)
-    price = stock.info.get("currentPrice", "N/A")
-    eps = stock.info.get("trailingEps", "N/A")
+    info = stock.info
 
-    st.subheader("📈 Stock Info")
-    st.write(f"**Current Price:** {price}")
-    st.write(f"**EPS:** {eps}")
+    price = info.get("currentPrice")
+    eps_ttm = info.get("trailingEps")
+    eps_fwd = info.get("forwardEps", eps_ttm)
+    roe = info.get("returnOnEquity", 0)
+    debt_equity = info.get("debtToEquity", 0)
 
-    # Simple valuation logic
-    base_value = round(eps * 15, 2) if eps != "N/A" else "N/A"
-    bull_value = round(eps * 20, 2) if eps != "N/A" else "N/A"
-    bear_value = round(eps * 10, 2) if eps != "N/A" else "N/A"
+    # Convert ROE to %
+    roe = roe * 100 if roe else 0
 
-    st.subheader("💰 Valuation")
-    st.write(f"Base Value: {base_value}")
-    st.write(f"Bull Value: {bull_value}")
-    st.write(f"Bear Value: {bear_value}")
+    if price is None or eps_ttm is None:
+        st.error("❌ Unable to fetch complete stock data. Try another ticker.")
+    else:
+        # ------------------ BASIC INFO ------------------
+        st.subheader("📈 Stock Information")
+        st.write(f"**Price:** ${price}")
+        st.write(f"**EPS (TTM):** {eps_ttm}")
+        st.write(f"**EPS (Forward):** {eps_fwd}")
+        st.write(f"**ROE (%):** {round(roe,2)}")
+        st.write(f"**Debt / Equity:** {debt_equity}")
 
-    st.subheader("🧠 AI Content")
+        # ------------------ VALUATION ENGINE ------------------
+        valuation = stock_valuation(
+            price=price,
+            eps_ttm=eps_ttm,
+            eps_fwd=eps_fwd,
+            roe=roe,
+            debt_equity=debt_equity
+        )
 
-    if st.button("Generate X Thread"):
-        st.write(generate_x_thread(ticker, price, base_value, bull_value, bear_value))
+        st.subheader("💰 Full Valuation Output")
 
-    if st.button("Generate YouTube Script"):
-        st.write(generate_youtube_script(ticker, price, base_value, bull_value, bear_value))
+        for key, value in valuation.items():
+            st.write(f"**{key}:** {value}")
 
-    if st.button("Generate Instagram Caption"):
-        st.write(generate_instagram_caption(ticker, price, base_value, bull_value, bear_value))
+        # ------------------ AI CONTENT ------------------
+        st.subheader("🧠 AI Generated Content")
+
+        if st.button("Generate X (Twitter) Thread"):
+            with st.spinner("Generating X thread..."):
+                st.write(
+                    generate_x_thread(
+                        ticker,
+                        price,
+                        valuation["Final_Intrinsic"],
+                        valuation["Bull_Growth_%"],
+                        valuation["Bear_Growth_%"]
+                    )
+                )
+
+        if st.button("Generate YouTube Script"):
+            with st.spinner("Generating YouTube script..."):
+                st.write(
+                    generate_youtube_script(
+                        ticker,
+                        price,
+                        valuation["Final_Intrinsic"],
+                        valuation["Bull_Growth_%"],
+                        valuation["Bear_Growth_%"]
+                    )
+                )
+
+        if st.button("Generate Instagram Caption"):
+            with st.spinner("Generating Instagram caption..."):
+                st.write(
+                    generate_instagram_caption(
+                        ticker,
+                        price,
+                        valuation["Final_Intrinsic"],
+                        valuation["Bull_Growth_%"],
+                        valuation["Bear_Growth_%"]
+                    )
+                )
