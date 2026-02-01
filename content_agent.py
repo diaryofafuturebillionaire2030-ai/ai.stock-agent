@@ -1,59 +1,42 @@
-import streamlit as st
 from transformers import pipeline
 
-@st.cache_resource
-def load_model():
-    return pipeline("text-generation", model="gpt2")
+# Load Hugging Face model (FREE)
+generator = pipeline(
+    "text-generation",
+    model="gpt2",
+    max_new_tokens=200
+)
 
-model = load_model()
-
-def generate_x_thread(stock, price, valuation):
+def generate_x_thread(stock, price, base, bull, bear):
     prompt = f"""
-You are a professional equity research analyst.
-Stock: {stock}
-Current Price: {price}
-Valuation:
-Base: {valuation['Base Value']}
-Bull: {valuation['Bull Value']}
-Bear: {valuation['Bear Value']}
-Verdict: {valuation['Verdict']}
+    Stock: {stock}
+    Current Price: {price}
+    Base Value: {base}
+    Bull Value: {bull}
+    Bear Value: {bear}
 
-Write 5 short tweets (X thread) summarizing this stock. Simple, engaging, and risk-aware.
-"""
-    with st.spinner("Generating X thread... ⏳"):
-        results = model(prompt, max_length=150, do_sample=True)
-    return results[0]['generated_text']
+    Write a short Twitter (X) thread explaining this valuation.
+    """
+    return generator(prompt)[0]["generated_text"]
 
-def generate_youtube_script(stock, price, valuation):
+
+def generate_youtube_script(stock, price, base, bull, bear):
     prompt = f"""
-You are a professional equity research analyst.
-Stock: {stock}
-Current Price: {price}
-Valuation:
-Base: {valuation['Base Value']}
-Bull: {valuation['Bull Value']}
-Bear: {valuation['Bear Value']}
-Verdict: {valuation['Verdict']}
+    Create a YouTube script explaining the valuation of {stock}.
+    Current Price: {price}
+    Base Value: {base}
+    Bull Value: {bull}
+    Bear Value: {bear}
+    """
+    return generator(prompt)[0]["generated_text"]
 
-Write a 1–2 minute YouTube script explaining this stock. Simple language, engaging.
-"""
-    with st.spinner("Generating YouTube script... ⏳"):
-        results = model(prompt, max_length=200, do_sample=True)
-    return results[0]['generated_text']
 
-def generate_instagram_caption(stock, price, valuation):
+def generate_instagram_caption(stock, price, base, bull, bear):
     prompt = f"""
-You are a professional equity research analyst.
-Stock: {stock}
-Current Price: {price}
-Valuation:
-Base: {valuation['Base Value']}
-Bull: {valuation['Bull Value']}
-Bear: {valuation['Bear Value']}
-Verdict: {valuation['Verdict']}
-
-Write a short, catchy Instagram caption about this stock.
-"""
-    with st.spinner("Generating Instagram caption... ⏳"):
-        results = model(prompt, max_length=100, do_sample=True)
-    return results[0]['generated_text']
+    Write an Instagram caption about {stock} valuation.
+    Current Price: {price}
+    Base Value: {base}
+    Bull Value: {bull}
+    Bear Value: {bear}
+    """
+    return generator(prompt)[0]["generated_text"]
